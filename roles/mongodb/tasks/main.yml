@@ -1,0 +1,23 @@
+- name: copy mongostack yml
+  copy:
+    src: mongostack.yml
+    dest: .
+    mode: "u=rw,g=r,o=rwx"
+  
+# - name: remove 
+#   shell: docker stack rm mongo-repl
+
+- name: setup mongodb
+  shell: docker stack deploy --compose-file mongostack.yml mongo-repl
+
+- name: copy repl.js
+  copy:
+    src: repl.js
+    dest: .
+    mode: "u=rw,g=r,o=rwx"
+
+- name: copy to container
+  shell: docker cp repl.js $(docker ps --filter "name=mongo-repl_master" -q):.
+
+- name: setup replication
+  shell: docker exec $(docker ps --filter "name=mongo-repl_master" -q) mongo repl.js 
